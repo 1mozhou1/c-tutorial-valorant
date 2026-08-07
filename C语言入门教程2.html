@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C 语言入门 · 无畏契约版</title>
+<style>
+  :root{
+    --bg:#0f1923;
+    --bg-deep:#0a0f14;
+    --panel:#17212b;
+    --panel-2:#1d2836;
+    --red:#FF4655;
+    --red-dim:#bf3340;
+    --text:#e8e6e1;
+    --text-dim:#8b98a5;
+    --line:rgba(255,255,255,.08);
+    --warn:#f2b544;
+    --blue:#6ea8ff;
+    --mono:Consolas,"Cascadia Code","Courier New",monospace;
+  }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    line-height:1.8;
+  }
+
+  /* ============ 侧栏 ============ */
+  .sidebar{
+    position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg-deep);
+    border-right:1px solid var(--line);
+    overflow-y:auto; z-index:100;
+    padding:22px 14px 30px;
+  }
+  .brand{
+    display:flex; align-items:center; gap:12px;
+    padding:0 10px 18px; margin-bottom:14px;
+    border-bottom:1px solid var(--line);
+  }
+  .brand-logo{
+    width:38px; height:38px; flex:none;
+    background:var(--red);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:20px; color:#fff;
+    clip-path:polygon(0 0,100% 0,100% 72%,72% 100%,0 100%);
+  }
+  .brand-title{ font-weight:700; font-size:15px; letter-spacing:.5px; }
+  .brand-sub{ font-size:11px; color:var(--text-dim); letter-spacing:2px; text-transform:uppercase; }
+
+  .nav{ list-style:none; margin:0; padding:0; }
+  .nav li{ margin:2px 0; }
+  .nav a{
+    display:flex; align-items:center; gap:10px;
+    text-decoration:none; color:var(--text-dim);
+    padding:9px 10px; border-left:3px solid transparent;
+    font-size:14px; line-height:1.5;
+    transition:color .15s, background .15s;
+    border-radius:2px;
+  }
+  .nav a .agent-code{
+    font-family:var(--mono); font-size:10px; letter-spacing:1px;
+    color:var(--red-dim); flex:none; width:58px; text-transform:uppercase;
+  }
+  .nav a:hover{ color:var(--text); background:rgba(255,255,255,.04); }
+  .nav a.active{ color:#fff; background:rgba(255,70,85,.08); border-left-color:var(--red); }
+  .nav a.active .agent-code{ color:var(--red); }
+  .sidebar-note{
+    margin:24px 10px 0; padding-top:16px;
+    border-top:1px solid var(--line);
+    font-size:12px; color:var(--text-dim);
+  }
+
+  /* ============ 主内容 ============ */
+  .main{ margin-left:280px; padding:40px 30px 80px; }
+  .content{ max-width:820px; margin:0 auto; }
+
+  .top-hero{
+    position:relative;
+    background:var(--bg-deep);
+    border:1px solid var(--line);
+    padding:48px 40px 40px;
+    margin-bottom:36px;
+    overflow:hidden;
+  }
+  .top-hero::after{
+    content:""; position:absolute; left:0; bottom:0; height:7px; width:100%;
+    background:repeating-linear-gradient(-45deg,var(--red) 0 16px,transparent 16px 32px);
+  }
+  .top-hero .kicker{
+    display:inline-block; font-family:var(--mono); font-size:12px; letter-spacing:3px;
+    color:var(--red); text-transform:uppercase; margin:0 0 12px;
+  }
+  .top-hero h1{
+    margin:0 0 8px; font-size:clamp(30px,6vw,46px); letter-spacing:1px;
+    line-height:1.2;
+  }
+  .top-hero h1 span{ color:var(--red); }
+  .top-hero .subtitle{ color:var(--text-dim); font-size:15px; margin:0; }
+
+  .intro-box{
+    border:1px solid var(--line); border-left:4px solid var(--red);
+    background:var(--panel); padding:18px 22px; margin:22px 0 0;
+  }
+  .intro-box h3{ margin:0 0 10px; color:var(--red); font-size:16px; letter-spacing:.5px; }
+  .intro-box ul{ margin:0; padding-left:20px; }
+  .intro-box li{ margin:4px 0; }
+
+  /* ============ 章节 ============ */
+  .chapter{ margin-bottom:52px; scroll-margin-top:20px; }
+  .chapter-hero{
+    position:relative;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.028) 0 1px, transparent 1px 34px),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.02) 0 1px, transparent 1px 26px),
+      var(--panel);
+    border-left:4px solid var(--accent,#FF4655);
+    padding:22px 26px 26px;
+    margin:0 0 22px;
+    overflow:hidden;
+  }
+  .chapter-hero::before{ /* 特工色斜切光带 */
+    content:""; position:absolute; top:-25%; bottom:-25%; left:-10%;
+    width:42%; transform:skewX(-16deg);
+    background:var(--accent,#FF4655); opacity:.12; pointer-events:none;
+  }
+  .chapter-hero::after{ /* 底部警戒斜纹 */
+    content:""; position:absolute; left:0; right:0; bottom:0; height:6px;
+    background:repeating-linear-gradient(-45deg, var(--accent,#FF4655) 0 12px, transparent 12px 24px);
+    opacity:.5; pointer-events:none;
+  }
+  .chapter-hero .agent-code{
+    position:absolute; right:14px; top:6px;
+    font-family:var(--mono); font-weight:800; font-size:48px; letter-spacing:2px;
+    color:var(--accent,#FF4655); opacity:.14; text-transform:uppercase; user-select:none;
+  }
+  .chapter-hero .agent-name{
+    margin:0 0 6px; color:var(--accent,#FF4655); font-weight:700; letter-spacing:2px;
+    font-size:14px; text-transform:uppercase;
+  }
+  /* 每章特工主题色 */
+  .ch-jett{ --accent:#5fd0e6; }      /* Jett 疾风青 */
+  .ch-brim{ --accent:#ff5a4f; }      /* Brimstone 指挥红 */
+  .ch-phoenix{ --accent:#ff9a3d; }   /* Phoenix 烈焰橙 */
+  .ch-sage{ --accent:#7fd4a5; }      /* Sage 圣芒绿 */
+  .ch-raze{ --accent:#ff7a4d; }      /* Raze 轰炸橙 */
+  .ch-armory{ --accent:#f2b544; }    /* 军械库 装备金 */
+  .ch-abilities{ --accent:#b06cff; } /* 技能 能量紫 */
+  .ch-cypher{ --accent:#4fd1c5; }    /* Cypher 情报青 */
+  .ch-match{ --accent:#ffd166; }     /* 战绩 胜利金 */
+  .chapter-hero h2{
+    margin:0; font-size:clamp(20px,4.2vw,28px); letter-spacing:.5px; line-height:1.3;
+  }
+
+  .chapter h3{
+    margin:28px 0 8px; color:var(--red); font-size:18px; letter-spacing:.5px;
+    padding-left:14px; position:relative;
+  }
+  .chapter h3::before{
+    content:""; position:absolute; left:0; top:.3em; bottom:.3em; width:4px;
+    background:var(--red);
+  }
+  .chapter p{ margin:10px 0; }
+  .chapter p strong{ color:#fff; }
+
+  code.inline{
+    background:rgba(255,255,255,.07); color:#ff9aa4;
+    padding:1px 6px; border-radius:4px;
+    font-family:var(--mono); font-size:.9em; white-space:nowrap;
+  }
+
+  /* ============ 代码块 ============ */
+  .code-wrap{
+    position:relative; margin:16px 0;
+    background:#0c1116; border:1px solid var(--line); border-radius:4px;
+  }
+  .code-wrap pre{ margin:0; padding:16px 18px; overflow-x:auto; }
+  .code-wrap code{
+    font-family:var(--mono); font-size:14px; line-height:1.7;
+    white-space:pre; color:var(--text);
+  }
+  .copy-btn{
+    position:absolute; top:8px; right:8px;
+    background:rgba(255,70,85,.12); color:var(--red);
+    border:1px solid rgba(255,70,85,.4); border-radius:3px;
+    font-size:12px; padding:4px 12px; cursor:pointer;
+    transition:background .15s; min-height:30px;
+  }
+  .copy-btn:hover{ background:rgba(255,70,85,.25); }
+  .copy-btn.done{ color:#8fd58a; border-color:rgba(143,213,138,.5); background:rgba(143,213,138,.1); }
+
+  /* 代码高亮配色 */
+  .c-kw{ color:#ff7b86; }
+  .c-string{ color:#8fd58a; }
+  .c-number{ color:#7ab8ff; }
+  .c-comment{ color:#6a7a89; font-style:italic; }
+  .c-pre{ color:#c792ea; }
+
+  /* ============ 划重点 / 避坑 / 练习 / 吐槽 ============ */
+  .keypoints{
+    background:rgba(255,70,85,.06); border:1px solid rgba(255,70,85,.35);
+    border-left:4px solid var(--red);
+    padding:14px 18px; border-radius:4px; margin:22px 0;
+  }
+  .keypoints h4{
+    margin:0 0 8px; color:var(--red); text-transform:uppercase;
+    letter-spacing:2px; font-size:13px;
+  }
+  .keypoints ul{ margin:0; padding-left:20px; }
+  .keypoints li{ margin:5px 0; }
+
+  .pitfall{
+    background:rgba(242,181,68,.06); border:1px solid rgba(242,181,68,.4);
+    border-left:4px solid var(--warn);
+    padding:14px 18px; border-radius:4px; margin:22px 0;
+  }
+  .pitfall h4{
+    margin:0 0 8px; color:var(--warn); text-transform:uppercase;
+    letter-spacing:2px; font-size:13px;
+  }
+  .pitfall ul{ margin:0; padding-left:20px; }
+  .pitfall li{ margin:6px 0; }
+  .pitfall li code{ white-space:nowrap; }
+
+  .practice{
+    background:rgba(110,168,255,.06); border:1px solid rgba(110,168,255,.4);
+    border-left:4px solid var(--blue);
+    padding:14px 18px; border-radius:4px; margin:22px 0;
+  }
+  .practice h4{
+    margin:0 0 8px; color:var(--blue); text-transform:uppercase;
+    letter-spacing:2px; font-size:13px;
+  }
+  .practice ol{ margin:0; padding-left:22px; }
+  .practice li{ margin:6px 0; }
+  .practice .ans{
+    color:var(--text-dim); font-size:.93em;
+  }
+  details.ans{
+    margin-top:6px; color:var(--text-dim); font-size:.93em;
+  }
+  details.ans summary{ cursor:pointer; color:var(--blue); font-size:.95em; }
+  details.ans summary:hover{ text-decoration:underline; }
+
+  .rib{
+    margin:22px 0 0; padding:12px 16px 12px 18px;
+    border-left:3px solid var(--red-dim);
+    background:var(--panel); color:var(--text-dim); font-size:15px;
+  }
+  .rib::before{ content:"学长吐槽："; color:var(--red); font-weight:700; }
+
+  /* ============ 表格 ============ */
+  .table-wrap{ overflow-x:auto; margin:16px 0; border:1px solid var(--line); border-radius:4px; }
+  table{ border-collapse:collapse; width:100%; min-width:440px; font-size:15px; }
+  th,td{ border-bottom:1px solid var(--line); padding:8px 14px; text-align:left; }
+  th{ background:var(--panel-2); color:var(--red); white-space:nowrap; }
+  tr:last-child td{ border-bottom:none; }
+  td code.inline{ white-space:nowrap; }
+
+  /* ============ 顶部栏（手机） ============ */
+  .topbar{
+    display:none; position:fixed; top:0; left:0; right:0; height:54px;
+    background:rgba(10,15,20,.92); backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line); z-index:200;
+    align-items:center; padding:0 14px; gap:10px;
+  }
+  .hamburger{
+    width:42px; height:42px; flex:none;
+    background:transparent; border:1px solid var(--line); border-radius:4px;
+    cursor:pointer; display:flex; flex-direction:column; justify-content:center; gap:5px;
+    align-items:center; padding:0;
+  }
+  .hamburger span{
+    display:block; width:18px; height:2px; background:var(--text);
+  }
+  .topbar .tb-title{ font-size:14px; font-weight:700; letter-spacing:.5px; }
+  .overlay{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.55);
+    z-index:150;
+  }
+  .overlay.show{ display:block; }
+
+  /* ============ 返回顶部 ============ */
+  .to-top{
+    position:fixed; right:18px; bottom:18px; z-index:120;
+    width:46px; height:46px; border-radius:4px;
+    background:var(--red); color:#fff; border:none; cursor:pointer;
+    font-size:20px; line-height:1; font-weight:700;
+    opacity:0; pointer-events:none; transform:translateY(10px);
+    transition:opacity .2s, transform .2s;
+  }
+  .to-top.show{ opacity:1; pointer-events:auto; transform:none; }
+  .to-top:hover{ background:var(--red-dim); }
+
+  footer{
+    margin-top:40px; padding-top:20px;
+    border-top:1px solid var(--line);
+    color:var(--text-dim); font-size:13px;
+  }
+
+  /* ============ 手机适配 ============ */
+  @media (max-width:768px){
+    .sidebar{
+      top:54px; height:calc(100% - 54px);
+      z-index:160;
+      transform:translateX(-100%);
+      transition:transform .25s ease;
+      width:280px; box-shadow:none;
+    }
+    .sidebar.open{ transform:none; box-shadow:0 0 30px rgba(0,0,0,.5); }
+    .topbar{ display:flex; }
+    .main{ margin-left:0; padding:66px 16px 60px; }
+    .top-hero{ padding:32px 22px 30px; }
+    .chapter{ scroll-margin-top:70px; }
+    .chapter-hero .agent-code{ font-size:40px; }
+    .copy-btn{ min-height:34px; padding:5px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 顶部栏（手机） ===== -->
+<header class="topbar">
+  <button class="hamburger" type="button" aria-label="打开目录">
+    <span></span><span></span><span></span>
+  </button>
+  <span class="tb-title">C 语言入门 · 无畏</span>
+</header>
+<div class="overlay"></div>
+
+<!-- ===== 侧栏目录 ===== -->
+<nav class="sidebar">
+  <div class="brand">
+    <div class="brand-logo">C</div>
+    <div>
+      <div class="brand-title">C 语言入门</div>
+      <div class="brand-sub">Valorant Edition</div>
+    </div>
+  </div>
+  <ul class="nav">
+    <li><a href="#start"><span class="agent-code">START</span><span>使用指南</span></a></li>
+    <li><a href="#ch1"><span class="agent-code">JETT</span><span>变量与数据类型</span></a></li>
+    <li><a href="#ch2"><span class="agent-code">BRIMSTONE</span><span>输入输出</span></a></li>
+    <li><a href="#ch3"><span class="agent-code">PHOENIX</span><span>运算符</span></a></li>
+    <li><a href="#ch4"><span class="agent-code">SAGE</span><span>条件判断</span></a></li>
+    <li><a href="#ch5"><span class="agent-code">RAZE</span><span>循环</span></a></li>
+    <li><a href="#ch6"><span class="agent-code">ARMORY</span><span>数组与字符串</span></a></li>
+    <li><a href="#ch7"><span class="agent-code">ABILITIES</span><span>函数</span></a></li>
+    <li><a href="#ch8"><span class="agent-code">CYPHER</span><span>指针</span></a></li>
+    <li><a href="#ch9"><span class="agent-code">MATCH</span><span>综合实战</span></a></li>
+  </ul>
+  <div class="sidebar-note">纯文字教学 · 不需要装环境<br>点目录随时跳转</div>
+</nav>
+
+<!-- ===== 正文 ===== -->
+<main class="main">
+<div class="content">
+
+  <!-- 首页 -->
+  <section id="start" class="chapter">
+    <div class="top-hero">
+      <p class="kicker">// C Programming for Beginners</p>
+      <h1><span>C 语言</span> 入门</h1>
+      <p class="subtitle">无畏契约联名款（并没有真的联名）· 深度到指针为止</p>
+      <div class="intro-box">
+        <h3>这份教程怎么用</h3>
+        <ul>
+          <li><strong>纯文字教学</strong>，不用装任何环境，打开就能读，手机上也能看</li>
+          <li>每一章由一位 <strong>特工代课</strong>，从游戏场景切入，别怕，都听得懂</li>
+          <li>每章标配：<strong>原理讲透</strong> → 代码示例 → <strong>常见错误避坑</strong> → <strong>课后练习</strong></li>
+          <li>练习都是<strong>纸上推演</strong>，不用真运行，答案藏在折叠框里，先自己想再看</li>
+          <li>学完你能做到：<strong>看得懂 C 代码长什么样</strong>，知道每一行在干嘛</li>
+          <li>到 <code class="inline">指针</code> 为止，这是 C 的"分水岭"关卡，也是本次的终点站</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 第1章 -->
+  <section id="ch1" class="chapter">
+    <header class="chapter-hero ch-jett">
+      <span class="agent-code">JETT</span>
+      <p class="agent-name">Agent JETT · 疾风代课</p>
+      <h2>第 1 章 · 变量与数据类型</h2>
+    </header>
+
+    <p>Jett 的身法很随性：一把刀、一团烟，说来就来。C 语言里的<strong>变量</strong>也差不多——它是一个<strong>小盒子</strong>，用来存东西，随存随取，还能随时改。血量掉一点，<code class="inline">hp</code> 就减一点，这就是变量存在的意义：<strong>帮程序记住需要记住的东西</strong>。</p>
+
+    <h3>大白话：变量是带名字的盒子</h3>
+    <p>声明一个变量，就是告诉 C："给我准备一个盒子，贴上名字 <code class="inline">hp</code>，里面放整数。"等你要用血量时，直接喊 <code class="inline">hp</code> 这个名字就行。盒子里装的东西随时能换——<code class="inline">hp = hp - 30</code>，就是把盒子里的数取出来减 30 再放回去。</p>
+
+    <h3>为什么要有"类型"？</h3>
+    <p>因为<strong>盒子得先定大小和装法</strong>。计算机底层全是 0 和 1，同一串二进制，按整数读是一个数，按字符读可能是个字母。类型就是告诉程序：<strong>这块空间有多宽、里面的 0/1 该怎么解读</strong>。新手先认识这三种：</p>
+    <ul>
+      <li><code class="inline">int</code> —— 整数，比如血量 100、击杀 18。占 4 字节左右，能装 ±21 亿以内</li>
+      <li><code class="inline">double</code> —— 带小数，比如 KD 1.53、爆头率 63.5%。占 8 字节，更"宽敞"</li>
+      <li><code class="inline">char</code> —— <strong>一个</strong>字符，比如段位字母 'A'、结算结果 '胜'。占 1 字节</li>
+    </ul>
+    <p>声明一句话：<code class="inline">类型 名字;</code>。想边声明边给值就叫"初始化"，比如：</p>
+
+    <div class="code-wrap"><pre><code>#include &lt;stdio.h&gt;
+
+int main() {
+    int hp = 100;        // 声明 int 并初始化成 100
+    double aim = 88.5;   // 枪法评分，带小数
+    char rank = 'B';     // 注意：字符用单引号括起来
+
+    printf("我的血量：%d\n", hp);
+    printf("枪法评分：%f\n", aim);
+    printf("段位：%c\n", rank);
+    return 0;
+}</code></pre></div>
+
+    <p>眼尖的同学会发现 <code class="inline">printf</code> —— 别慌，它是 C 的"打印机"，输出用。这一章先当黑盒使，下一章 Brimstone 会把它讲透。</p>
+
+    <p>还有个细节得提：<strong>起名字有规矩</strong>。名字可以用字母、数字、下划线，但<strong>不能数字开头</strong>，也不能和关键字撞名（<code class="inline">int</code>、<code class="inline">char</code> 这些词被系统预定了）。<code class="inline">kills</code>、<code class="inline">kd_ratio</code> 都行，<code class="inline">2kills</code>、<code class="inline">int</code> 就不行。名字自己起，但得让人一眼看懂——没人想知道 <code class="inline">a</code> 到底是什么。</p>
+
+    <div class="pitfall">
+      <h4>⚠ 新手常踩的坑</h4>
+      <ul>
+        <li><code class="inline">Int hp;</code> —— 把 <code class="inline">int</code> 写大写。C 严格区分大小写，<code class="inline">Int</code> 不是类型，编译直接报错</li>
+        <li><code class="inline">char a = "A";</code> —— 单引号 <code class="inline">''</code> 才是字符，双引号 <code class="inline">""</code> 是字符串（好几个字符）。一个字符用单引号</li>
+        <li><code class="inline">int hp = "100";</code> —— 类型不匹配。整数变量只能装整数，不能塞字符串</li>
+        <li>声明了变量却忘了初始化：<code class="inline">int hp;</code> 直接拿来用，里面的值是"上一任房客"留下的垃圾数字</li>
+      </ul>
+    </div>
+
+    <div class="keypoints">
+      <h4>划重点</h4>
+      <ul>
+        <li>变量 = 带名字的盒子，先声明（<code class="inline">int hp;</code>）再用</li>
+        <li>类型决定装法和空间：<code class="inline">int</code> 整数、<code class="inline">double</code> 小数、<code class="inline">char</code> 单字符</li>
+        <li><code class="inline">=</code> 是"装进去"，不是数学里的"等于"</li>
+        <li>字符用单引号 <code class="inline">''</code>，C 区分大小写，名字不能数字开头</li>
+      </ul>
+    </div>
+
+    <div class="practice">
+      <h4>课后练习 · 纸上谈兵</h4>
+      <ol>
+        <li>看代码猜输出：<code class="inline">int hp = 100; hp = hp - 30; printf("%d", hp);</code> 屏幕上会显示多少？</li>
+        <li>下面哪个是合法的变量名？<code class="inline">kills</code>、<code class="inline">2kills</code>、<code class="inline">int</code>、<code class="inline">kd_ratio</code></li>
+        <li>想存你的 KD 值 <code class="inline">1.53</code>，应该用什么类型？</li>
+        <li>脑筋急转弯：为什么计算机需要"类型"这种东西？</li>
+      </ol>
+      <details class="ans"><summary>点开看答案</summary>
+        1. 70（血量先 100，减 30 变 70）。2. <code class="inline">kills</code> 和 <code class="inline">kd_ratio</code>。3. <code class="inline">double</code>。4. 因为同样的 0/1 按不同类型读出来完全不同，类型是"解读方式"。
+      </details>
+    </div>
+
+    <p class="rib">char 只能存一个字符？想要一长串字、还带空格的那种？那是第六章数组的活儿，急什么。</p>
+  </section>
+
+  <!-- 第2章 -->
+  <section id="ch2" class="chapter">
+    <header class="chapter-hero ch-brim">
+      <span class="agent-code">BRIMSTONE</span>
+      <p class="agent-name">Agent BRIMSTONE · 指挥官代课</p>
+      <h2>第 2 章 · 输入输出（printf / scanf）</h2>
+    </header>
+
+    <p>Brimstone 是队里负责喊话的指挥官：他得<strong>接收指令</strong>，也得<strong>播报战报</strong>。一个 C 程序跟人打交道，干的就是这两件事：把话说出去，把话接进来。</p>
+
+    <h3>printf：往外"播报"</h3>
+    <p><code class="inline">printf</code> 是 C 的打印机。它最神奇的地方是那个 <code class="inline">%d</code>——这叫<strong>格式说明符</strong>，相当于在句子留了个<strong>坑位</strong>。坑位后面跟的变量，会按顺序填进去：</p>
+
+    <div class="code-wrap"><pre><code>#include &lt;stdio.h&gt;
+
+int main() {
+    int kills = 18;
+    int deaths = 12;
+
+    printf("本场 %d 杀 %d 死，KD 不错哦\n", kills, deaths);
+    //      ^^^^      ^^^^
+    //      第一个坑位填 kills，第二个坑位填 deaths
+    return 0;
+}</code></pre></div>
+
+    <p>坑位有讲究，<strong>什么类型填什么符号</strong>，对不上就会打出垃圾值：</p>
+    <ul>
+      <li><code class="inline">%d</code> 整数 · <code class="inline">%f</code> 小数 · <code class="inline">%c</code> 单字符 · <code class="inline">%s</code> 字符串</li>
+    </ul>
+    <p>结尾那个 <code class="inline">\n</code> 是"换行符"，它让你的光标在打完这行后另起一行——不然一屏幕字全糊成一条。</p>
+
+    <h3>scanf：从键盘"接收"</h3>
+    <p><code class="inline">scanf</code> 负责读键盘输入。它和 printf 长得很像，但有个关键区别——<strong>scanf 要的是"地址"</strong>，所以变量前面必须加 <code class="inline">&amp;</code>：</p>
+
+    <div class="code-wrap"><pre><code>#include &lt;stdio.h&gt;
+
+int main() {
+    int kills;
+    printf("请输入你的击杀数：");
+    scanf("%d", &amp;kills);      // 读一个整数，写进 kills 那个盒子
+
+    printf("本场击杀了 %d 个敌人！\n", kills);
+    return 0;
+}</code></pre></div>
+
+    <h3>为什么 scanf 要 &amp; 而 printf 不要？</h3>
+    <p>区别在目的：printf 只需要"把这个值打印出来"，所以给它<strong>值</strong>就够了；scanf 要"改这个变量"，想改一个盒子，你必须先找到<strong>它住在哪</strong>，<code class="inline">&amp;</code> 就是"取地址"的意思。现在先记牢"<strong>scanf 要带 &amp;</strong>"，至于地址是什么、怎么用，第八章 Cypher 会把它彻底讲明白——你会在那里恍然大悟。</p>
+
+    <div class="pitfall">
+      <h4>⚠ 新手常踩的坑</h4>
+      <ul>
+        <li><code class="inline">scanf("%d", kills)</code> —— 忘了写 <code class="inline">&amp;</code>。程序可能直接崩溃，或者往垃圾地址写值，这是 C 里最有名的翻车点之一</li>
+        <li>printf 里坑位数量和后面变量数量对不上 —— 少填了会打印垃圾数字，多填了会被忽略</li>
+        <li><code class="inline">%d</code> 配了 <code class="inline">double</code> —— 类型对不上，打出来是乱码数字</li>
+        <li>忘写 <code class="inline">return 0;</code> —— 编译器会嘀嘀咕咕警告你（虽然一般还能跑）</li>
+      </ul>
+    </div>
+
+    <div class="keypoints">
+      <h4>划重点</h4>
+      <ul>
+        <li><code class="inline">printf("文字 %d", 变量)</code> —— 坑位按顺序填</li>
+        <li>坑位对号入座：<code class="inline">%d</code> 整数、<code class="inline">%f</code> 小数、<code class="inline">%c</code> 字符、<code class="inline">%s</code> 字符串</li>
+        <li><code class="inline">scanf("%d", &amp;kills)</code> —— 记住要加 <code class="inline">&amp;</code>，因为要改变量的地址</li>
+        <li><code class="inline">\n</code> 是换行，让输出另起一行</li>
+      </ul>
+    </div>
+
+    <div class="practice">
+      <h4>课后练习 · 纸上谈兵</h4>
+      <ol>
+        <li>补全：<code class="inline">scanf("%d", ____);</code> 想读进变量 <code class="inline">hp</code>，空位该填什么？</li>
+        <li>想读一个小数进 <code class="inline">double</code> 变量，<code class="inline">scanf</code> 的坑位符号是什么？</li>
+        <li>思考：为什么 printf 不用 <code class="inline">&amp;</code>，scanf 却要？</li>
+        <li>看代码猜输出：<code class="inline">printf("%d-%d", 3, 5);</code></li>
+      </ol>
+      <details class="ans"><summary>点开看答案</summary>
+        1. <code class="inline">&amp;hp</code>。2. 小数点用 <code class="inline">%lf</code>。3. 因为 scanf 要"改"这个变量，必须找到它的地址；printf 只要值。4. <code class="inline">3-5</code>。
+      </details>
+    </div>
+
+    <p class="rib">学完这章，你就能写一个"报击杀数"的小程序了。虽然它只会反过来问你话，但程序问你话哎，多酷。</p>
+  </section>
+
+  <!-- 第3章 -->
+  <section id="ch3" class="chapter">
+    <header class="chapter-hero ch-phoenix">
+      <span class="agent-code">PHOENIX</span>
+      <p class="agent-name">Agent PHOENIX · 火焰代课</p>
+      <h2>第 3 章 · 运算符</h2>
+    </header>
+
+    <p>Phoenix 的技能讲究连招：点火 → 灼烧 → 回血，一套下来伤害拉满。运算也是把数据"连"起来的东西，让它们互相加减乘除，算出一个新值。</p>
+
+    <h3>算术运算符全家桶</h3>
+    <div class="table-wrap">
+      <table>
+        <tr><th>运算符</th><th>意思</th><th>例子</th></tr>
+        <tr><td><code class="inline">+</code></td><td>加</td><td><code class="inline">5 + 2</code> 得 7</td></tr>
+        <tr><td><code class="inline">-</code></td><td>减</td><td><code class="inline">5 - 2</code> 得 3</td></tr>
+        <tr><td><code class="inline">*</code></td><td>乘</td><td><code class="inline">5 * 2</code> 得 10</td></tr>
+        <tr><td><code class="inline">/</code></td><td>除（整数相除只留整数部分）</td><td><code class="inline">5 / 2</code> 得 2</td></tr>
+        <tr><td><code class="inline">%</code></td><td>取余（除完剩多少）</td><td><code class="inline">5 % 2</code> 得 1</td></tr>
+        <tr><td><code class="inline">++</code></td><td>自增（自己加 1）</td><td><code class="inline">i++</code> 等价 <code class="inline">i = i + 1</code></td></tr>
+        <tr><td><code class="inline">--</code></td><td>自减（自己减 1）</td><td><code class="inline">i--</code> 等价 <code class="inline">i = i - 1</code></td></tr>
+        <tr><td><code class="inline">=</code></td><td>赋值（把右边装进左边）</td><td><code class="inline">a = 5</code></td></tr>
+        <tr><td><code class="inline">+=</code> <code class="inline">-=</code> <code class="inline">*=</code> <code class="inline">/=</code></td><td>算完再赋值</td><td><code class="inline">a += 3</code> 等价 <code class="inline">a = a + 3</code></td></tr>
+      </table>
+    </div>
+
+    <h3>运算顺序：跟数学一个规矩</h3>
+    <p>先乘除后加减，括号最高优先——和小学学的一模一样，不用担心。真正要小心的坑在下面：</p>
+
+    <h3>整数除法会"丢小数"</h3>
+    <p><code class="inline">int / int</code>，结果是 <strong>int</strong>，小数部分被无情丢掉。<code class="inline">5 / 2</code> 是 2，不是 2.5。想算 KD 这种精确除法，得先把其中一个<strong>强转</strong>成小数，强转的写法是 <code class="inline">(double)</code>：</p>
+
+    <div class="code-wrap"><pre><code>#include &lt;stdio.h&gt;
+
+int main() {
+    int kills = 10;
+    int deaths = 3;
+
+    double kd = (double)kills / deaths;   // 强转成小数再除，才有精确结果
+    double kd_wrong = kills / deaths;     // 整数除整数，结果是 3 然后塞进 double
+
+    int money = 2500;
+    money -= 800;        // 买把枪，剩 1700
+    int spare = money % 1000;   // 算算一千以外的零头 = 700
+
+    printf("正确 KD 是 %f\n", kd);        // 3.333333
+    printf("偷懒的 KD 是 %f\n", kd_wrong); // 3.000000，看出来差距了吗
+    printf("买完枪剩 %d\n", money);
+    printf("零头 %d\n", spare);
+    return 0;
+}</code></pre></div>
+
+    <h3>取余 % 有什么用？</h3>
+    <p>判断奇偶、算零头、做循环里的"每 N 次"——都是它的主场。<code class="inline">n % 2</code> 得 0 就是偶数，得 1 就是奇数。记住这个，练习会用到。</p>
+
+    <div class="pitfall">
+      <h4>⚠ 新手常踩的坑</h4>
+      <ul>
+        <li><code class="inline">5 / 2</code> 想得 2.5 —— 两个整数相除丢小数，结果是 2。要精确就强转</li>
+        <li><code class="inline">a = a + 1</code> 看成数学矛盾 —— 它是"把 a 取出来 +1 再放回去"，程序常态，别慌</li>
+        <li>除以 0 —— <code class="inline">a / 0</code> 程序直接崩，C 不帮你拦</li>
+        <li><code class="inline">a *= 2 + 1</code> 理解错 —— 它等价 <code class="inline">a = a * (2+1)</code>，乘法作用于右边整个式子</li>
+      </ul>
+    </div>
+
+    <div class="keypoints">
+      <h4>划重点</h4>
+      <ul>
+        <li><code class="inline">int / int</code> 结果是整数，小数被丢掉</li>
+        <li>想要精确除法，用 <code class="inline">(double)</code> 强转其中一个</li>
+        <li><code class="inline">%</code> 取余：判断奇偶、算零头一把好手</li>
+        <li><code class="inline">++</code> <code class="inline">--</code> 自增自减；<code class="inline">+=</code> <code class="inline">-=</code> 是简写</li>
+        <li>运算顺序：先乘除后加减，括号最大</li>
+      </ul>
+    </div>
+
+    <div class="practice">
+      <h4>课后练习 · 纸上谈兵</h4>
+      <ol>
+        <li>心算：<code class="inline">10 / 3</code> 是多少？<code class="inline">10 % 3</code> 又是多少？</li>
+        <li>心算：<code class="inline">5 + 3 * 2</code> 等于几？（想想运算顺序）</li>
+        <li>把 <code class="inline">money = money + 500</code> 改写成复合赋值写法。</li>
+        <li>思考：怎么用一条运算判断一个整数是奇数还是偶数？</li>
+      </ol>
+      <details class="ans"><summary>点开看答案</summary>
+        1. 3 和 1（整除剩 3，取余剩 1）。2. 11（先乘 3*2=6，再加 5）。3. <code class="inline">money += 500</code>。4. <code class="inline">n % 2 == 0</code> 是偶数，否则奇数。
+      </details>
+    </div>
+
+    <p class="rib">看到 <code class="inline">a = a + 1</code> 千万别慌，它不是数学矛盾，是程序在给自己叠 buff。</p>
+  </section>
+
+  <!-- 第4章 -->
+  <section id="ch4" class="chapter">
+    <header class="chapter-hero ch-sage">
+      <span class="agent-code">SAGE</span>
+      <p class="agent-name">Agent SAGE · 哨卫代课</p>
+      <h2>第 4 章 · 条件判断（if / switch）</h2>
+    </header>
+
+    <p>Sage 从不乱奶：谁血低了才奶，谁倒了才拉。这叫<strong>按条件办事</strong>——程序里最最常见的套路。C 里想"看情况做不同的事"，就用 <code class="inline">if</code> 家族和 <code class="inline">switch</code>。</p>
+
+    <h3>if / else if / else：一路问下去</h3>
+    <p><code class="inline">if (条件)</code> 括号里的条件如果<strong>成立（为真）</strong>，就执行后面花括号里的代码；不成立，就跳到 <code class="inline">else if</code> 再问一次；全都不成立，走最后的 <code class="inline">else</code>。判断是从上往下"命中即停"的：</p>
+
+    <div class="code-wrap"><pre><code>#include &lt;stdio.h&gt;
+
+int main() {
+    int hp = 25;
+
+    if (hp &lt;= 30) {
+        printf("血量太低，Sage 奶你一口！\n");
+    } else if (hp &lt; 80) {
+        printf("有点小伤，注意走位\n");
+    } else {
+        printf("满状态，冲！\n");
+    }
+    return 0;
+}</code></pre></div>
+
+    <p>条件里要用的<strong>比较运算符</strong>：<code class="inline">==</code> 等于、<code class="inline">!=</code> 不等于、<code class="inline">&gt;</code> 大于、<code class="inline">&lt;</code> 小于、<code class="inline">&gt;=</code> 大于等于、<code class="inline">&lt;=</code> 小于等于。想组合条件：<code class="inline">&amp;&amp;</code> 是"并且"，<code class="inline">||</code> 是"或者"。</p>
+
+    <h3>switch：多个具体值逐个对号</h3>
+    <p>当判断的是"<strong>等于某一个具体值</strong>"、且情况很多时，<code class="inline">switch</code> 比一串 if 更清爽——比如按钱数决定这回合买什么枪：</p>
+
+    <div class="code-wrap"><pre><code>int money = 4500;
+
+switch (money / 1000) {   // 4500 / 1000 = 4
+    case 0:  printf("经济局，别浪\n"); break;
+    case 1:  printf("半起枪，打信息枪\n"); break;
+    case 4:  printf("满甲大枪，随便打\n"); break;
+    default: printf("钱多，全给安排上\n"); break;
+}</code></pre></div>
+
+    <p>每个 <code class="inline">case</code> 结尾那个 <code class="inline">break</code> 千万别省——它是"这一档处理完就收工"的出口。<strong>不写 break，程序会"贯穿"下去</strong>，把后面所有 case 的内容全执行一遍，这是 switch 最有名的陷阱。找不到匹配项时，走最后的 <code class="inline">default</code>。</p>
+
+    <div class="pitfall">
+      <h4>⚠ 新手常踩的坑</h4>
+      <ul>
+        <li><code class="inline">if (hp = 100)</code> —— 用了一个 <code class="inline">=</code>！这是<strong>赋值</strong>不是比较。赋值几乎总是"真"，分支永远成立。判断相等必须 <code class="inline">==</code></li>
+        <li>switch 里忘写 <code class="inline">break</code> —— 程序一路贯穿，把所有 case 都执行一遍</li>
+        <li><code class="inline">case 后面写变量</code> —— switch 的 case 只能跟常量，不能跟变量</li>
+        <li>用 <code class="inline">=</code> 代替 <code class="inline">==</code> 在条件里比较数字，编译器顶多警告，跑起来全错</li>
+      </ul>
+    </div>
+
+    <div class="keypoints">
+      <h4>划重点</h4>
+      <ul>
+        <li><code class="inline">if (条件) { } else if { } else { }</code> 从上往下，命中即停</li>
+        <li>判断<strong>相等</strong>用 <code class="inline">==</code>（两个等号！）</li>
+        <li>组合条件：<code class="inline">&amp;&amp;</code> 并且、<code class="inline">||</code> 或者</li>
+        <li><code class="inline">switch</code> 适合"等于某个具体值"，每个分支结尾 <code class="inline">break</code></li>
+      </ul>
+    </div>
+
+    <div class="practice">
+      <h4>课后练习 · 纸上谈兵</h4>
+      <ol>
+        <li>推演：上面 if 的例子里，<code class="inline">hp = 50</code> 会走哪个分支？打印什么？</li>
+        <li><code class="inline">if (kills &gt; 10 &amp;&amp; deaths &lt; 5)</code> —— 什么时候这个条件才为真？</li>
+        <li>switch 里忘写 <code class="inline">break</code> 会怎样？</li>
+        <li>找 bug：<code class="inline">if (score = 100)</code> 想判断 score 是不是 100，哪里写错了？</li>
+      </ol>
+      <details class="ans"><summary>点开看答案</summary>
+        1. 走 <code class="inline">else if</code>（50 ≤ 30 不成立，但 50 &lt; 80 成立），打印"有点小伤，注意走位"。2. 两个条件都满足才算数。3. 一路贯穿，后面的 case 全执行。4. 用了 <code class="inline">=</code> 应该是 <code class="inline">==</code>。
+      </details>
+    </div>
+
+    <p class="rib"><code class="inline">==</code> 才是相等，<code class="inline">=</code> 是赋值。这俩写错一个，报错能让你找一下午——学长的血泪教训，现在传给你了。</p>
+  </section>
+
+  <!-- 第5章 -->
+  <section id="ch5" class="chapter">
+    <header class="chapter-hero ch-raze">
+      <span class="agent-code">RAZE</span>
+      <p class="agent-name">Agent RAZE · 轰炸代课</p>
+      <h2>第 5 章 · 循环（for / while）</h2>
+    </header>
+
+    <p>Raze 的炮台会一直突突突，直到子弹打完。这就是<strong>循环</strong>：同一件事反复做，做到某个条件满足才停。C 里有两兄弟：</p>
+    <ul>
+      <li><code class="inline">for</code> —— 知道"要做几遍"，比如进攻方要打 12 个回合</li>
+      <li><code class="inline">while</code> —— 看情况"做到什么时候"，比如子弹打到没</li>
+    </ul>
+
+    <h3>for：三件套，照着填</h3>
+    <p><code class="inline">for (起点; 条件; 步进)</code> 三个坑位分别是：从哪开始、做到什么时候停、每轮做完怎么变。执行顺序很关键：<strong>先初始化 → 判断条件 → 执行代码 → 步进 → 再判断 → …</strong>，直到条件不成立跳出。</p>
+
+    <div class="code-wrap"><pre><code>#include &lt;stdio.h&gt;
+
+int main() {
+    // 进攻方打 12 个回合
+    for (int round = 1; round &lt;= 12; round++) {
+        printf("第 %d 回合：冲点！\n", round);
+    }
+
+    // 子弹打到没为止
+    int bullets = 5;
+    while (bullets &gt; 0) {
+        printf("哒哒哒！还剩 %d 发\n", bullets - 1);
+        bullets--;   // 打掉一发，否则永远打不完
+    }
+    return 0;
+}</code></pre></div>
+
+    <p><code class="inline">round++</code> 就是"每回合自己加 1"（还记得第三章的 <code class="inline">++</code> 吗）。想中途停手？<code class="inline">break</code> 能直接跳出循环——就像 Raze 自己看场面不对，提前收了炮台。</p>
+
+    <h3>while：先问再做；还有个"先做再问"的弟弟</h3>
+    <p><code class="inline">while (条件)</code> 是<strong>先判断后执行</strong>：条件一开始就不成立，就一次都不做。它有个弟弟 <code class="inline">do-while</code>，<strong>先执行一次、再判断</strong>，至少会做一遍——适合"先开枪后看战绩"的场景。这一章不用背它，知道有这号人就行。</p>
+
+    <div class="pitfall">
+      <h4>⚠ 新手常踩的坑</h4>
+      <ul>
+        <li><strong>死循环</strong>：条件永远成立，比如 <code class="inline">while (1)</code> 或者忘写 <code class="inline">bullets--</code>，程序转成无限炮台停不下来</li>
+        <li>循环里忘了"改变步进"——循环变量一直不变，要么死循环要么跳不出</li>
+        <li>想打 12 次却写 <code class="inline">round &lt;= 12</code> 还是 <code class="inline">round &lt; 12</code> 分不清 —— 一个执行 12 次，一个只执行 11 次（从 1 数到 11 是 11 个）</li>
+        <li><code class="inline">i++</code> 手滑写成 <code class="inline">i--</code>，计数方向反了，条件永远满足 → 死循环</li>
+      </ul>
+    </div>
+
+    <div class="keypoints">
+      <h4>划重点</h4>
+      <ul>
+        <li><code class="inline">for (起点; 条件; 步进)</code> —— 初始化→判断→执行→步进，循环往复</li>
+        <li><code class="inline">while (条件)</code> —— 先判断后执行，条件一开始不成立就一次都不做</li>
+        <li><code class="inline">break</code> 中途跳出循环</li>
+        <li>别让条件永远成立，那就是死循环</li>
+      </ul>
+    </div>
+
+    <div class="practice">
+      <h4>课后练习 · 纸上谈兵</h4>
+      <ol>
+        <li>推演：<code class="inline">for (int i = 1; i &lt;= 3; i++)</code> 会执行几次？打印 i 依次是什么？</li>
+        <li>推演：<code class="inline">while (bullets &gt; 0)</code>，如果一开始 <code class="inline">bullets = 0</code>，会执行几次？</li>
+        <li>想打印 1 到 5，for 的条件应该怎么写？</li>
+        <li>思考：为什么循环体里一定要有让条件"靠近结束"的动作（比如 <code class="inline">i++</code>）？</li>
+      </ol>
+      <details class="ans"><summary>点开看答案</summary>
+        1. 3 次，i 依次是 1、2、3。2. 0 次（先判断，条件一开始就不成立）。3. <code class="inline">for (int i = 1; i &lt;= 5; i++)</code>。4. 没有步进，条件永远不变，就会死循环。
+      </details>
+    </div>
+
+    <p class="rib">死循环 = 你的程序变成炮台，子弹无限，停不下来。想让它停，只能手起刀落关窗口。</p>
+  </section>
+
+  <!-- 第6章 -->
+  <section id="ch6" class="chapter">
+    <header class="chapter-hero ch-armory">
+      <span class="agent-code">ARMORY</span>
+      <p class="agent-name">军械库 · 装备清点</p>
+      <h2>第 6 章 · 数组与字符串</h2>
+    </header>
+
+    <p>你见过弹夹吧？一发发子弹排成一串，整个弹夹就是一个<strong>数组</strong>——<strong>一堆同类型数据的排队</strong>。往弹夹里装 5 发子弹：</p>
+
+    <h3>数组：连续的一排小格子</h3>
+    <p>声明数组：<code class="inline">int bullets[5]</code> 意思是"给我一排 5 个 int 格子"。数组在内存里是<strong>挨着排</strong>的一排房间，每个房间有编号（下标），从 0 开始：</p>
+
+    <div class="code-wrap"><pre><code>#include &lt;stdio.h&gt;
+
+int main() {
+    int bullets[5] = {1, 1, 1, 1, 1};  // 弹夹里 5 发子弹
+
+    printf("第 1 发：%d\n", bullets[0]);  // 1
+    printf("第 3 发：%d\n", bullets[2]);  // 1
+
+    bullets[2] = 0;   // 第 3 发打出去了，变成 0（空）
+    printf("打完第 3 发后：%d\n", bullets[2]);
+    return 0;
+}</code></pre></div>
+
+    <h3>全世界新手都踩的坑：下标从 0 开始</h3>
+    <p>第 1 个元素是 <code class="inline">bullets[0]</code>，不是 <code class="inline">bullets[1]</code>。你数到第 5 发的时候，它是 <code class="inline">bullets[4]</code>。规律：<strong>第 N 个元素，下标是 N-1</strong>。为什么会这样？因为下标是"离第 1 格多远"——第 1 格离自己 0 格远，第 5 格离第 1 格 4 格远。</p>
+    <p>还有个大前提要强调：数组的<strong>长度在声明时就定死了</strong>，<code class="inline">bullets[5]</code> 永远 5 格，想扩容得换个新的。而且——<strong>C 不帮你检查下标越界</strong>。你写 <code class="inline">bullets[7]</code>，它不会拦你，只会读到内存里乱七八糟的别的数据，或者把别的数据写坏。这是 C 最著名的"野路子"。</p>
+
+    <h3>字符串：就是字符数组，末尾藏着个 \0</h3>
+    <p>"一长串文字"呢？比如你的游戏 ID？C 里的<strong>字符串</strong>本质就是一个字符数组，末尾还藏着个看不见的 <code class="inline">\0</code>（结束符），专门告诉 printf"这串字到这就结束了"：</p>
+
+    <div class="code-wrap"><pre><code>char name[] = "Jett";   // 一串字符排成数组
+// 内存里实际是：J e t t \0 （4 个字母 + 1 个结束符）
+printf("我的 ID 是 %s\n", name);   // %s 打印整串字符串</code></pre></div>
+
+    <p>所以 <code class="inline">"Jett"</code> 看着是 4 个字母，占的空间其实是 5 格——那格 <code class="inline">\0</code> 是必须的，没有它，程序不知道这串字在哪结束，会一直往后读。这就是为什么字符串长度要"多加 1"。上一章学的 <code class="inline">%s</code> 在 printf 里用的就是它。</p>
+
+    <div class="pitfall">
+      <h4>⚠ 新手常踩的坑</h4>
+      <ul>
+        <li>下标从 1 开始数 → 访问错元素，第一个元素永远是 <code class="inline">arr[0]</code></li>
+        <li><strong>越界访问</strong> <code class="inline">bullets[5]</code>（长度 5 的合法下标是 0~4）—— C 不拦你，读到垃圾数据或写坏内存</li>
+        <li><code class="inline">char name[4] = "Jett";</code> —— 忘了 <code class="inline">\0</code> 占一位，4 格装不下 5 个字符</li>
+        <li>想用 <code class="inline">==</code> 比较两个字符串 —— 不行，<code class="inline">==</code> 比较的是地址不是内容。现在先别比较字符串，记住这个坑就行</li>
+      </ul>
+    </div>
+
+    <div class="keypoints">
+      <h4>划重点</h4>
+      <ul>
+        <li>数组 = 一串同类型的值，<code class="inline">类型 名字[数量]</code>，长度声明后定死</li>
+        <li><strong>下标从 0 开始</strong>：第 1 个是 <code class="inline">arr[0]</code>，第 N 个是 <code class="inline">arr[N-1]</code></li>
+        <li>C 不检查越界，访问要自己守规矩</li>
+        <li>字符串 = <code class="inline">char[]</code>，末尾藏 <code class="inline">\0</code>，打印用 <code class="inline">%s</code></li>
+      </ul>
+    </div>
+
+    <div class="practice">
+      <h4>课后练习 · 纸上谈兵</h4>
+      <ol>
+        <li><code class="inline">int a[4]</code> 的合法下标范围是多少到多少？</li>
+        <li>推演：<code class="inline">char s[] = "AB";</code> 实际占几个 char？（想想 \0）</li>
+        <li><code class="inline">bullets[0]</code> 是弹夹里的第几发子弹？</li>
+        <li>思考：为什么字符串必须有 <code class="inline">\0</code> 这个结束符？</li>
+      </ol>
+      <details class="ans"><summary>点开看答案</summary>
+        1. 0 到 3（共 4 个）。2. 3 个（A、B、\0）。3. 第 1 发。4. 让程序知道这串字符在哪结束，否则会一直往后读。
+      </details>
+    </div>
+
+    <p class="rib">记住"从 0 数起"这一条，你的弹夹就不会少装一发、多耗一发。多少大神就是在数组边界上翻的车。</p>
+  </section>
+
+  <!-- 第7章 -->
+  <section id="ch7" class="chapter">
+    <header class="chapter-hero ch-abilities">
+      <span class="agent-code">ABILITIES</span>
+      <p class="agent-name">技能系统 · Q / E / C / X</p>
+      <h2>第 7 章 · 函数</h2>
+    </header>
+
+    <p>每个特工都有技能，每个技能就是一坨<strong>封装好的动作</strong>：按下 Q，它就执行一整套东西。C 里的<strong>函数</strong>就是这个——<strong>给一段代码起个名字，随时叫它来干活</strong>。这大概是 C 里性价比最高的发明：写一遍，用一万遍。</p>
+
+    <h3>先定义（发明技能），再调用（使用技能）</h3>
+    <p>函数长这样：<code class="inline">返回值类型 函数名(参数) { 要执行的代码 }</code>。看看一个"治疗"技能：</p>
+
+    <div class="code-wrap"><pre><code>#include &lt;stdio.h&gt;
+
+// 定义一个"治疗"技能，amount 是奶量（参数）
+void heal(int amount) {
+    printf("治疗了 %d 点血量！\n", amount);
+}
+
+int main() {
+    heal(50);   // 调用技能，奶 50
+    heal(30);   // 再调用一次，奶 30
+    return 0;
+}</code></pre></div>
+
+    <p>函数名字前的 <code class="inline">void</code> 是"这个技能不回报结果"。如果它要算个数字还给你（比如算 KD），前面就写结果的类型——<code class="inline">double kd()</code>，函数里用 <code class="inline">return</code> 把结果递回去。</p>
+
+    <h3>程序是怎么"执行"函数的？</h3>
+    <p>想象指挥官喊"heal(50)"：程序先记下自己现在站在第几行（方便回头），然后"跳"进函数里把动作做完，做完再"跳"回刚才的地方接着往下走。所以函数的执行是：<strong>记位置 → 跳进去执行 → 跳回来继续</strong>。参数 <code class="inline">amount</code> 是调用时"喂"进去的东西——放技能要选目标，喂参数就是选数值。</p>
+
+    <h3>为什么值得封装？</h3>
+    <p>第一是<strong>复用</strong>：一段逻辑写一次，到处调用。第二是<strong>好改</strong>：以后要改"治疗"的逻辑，只改函数里一处，全程序生效——不用满世界找代码复制粘贴。你早就享受过这个福利了：<code class="inline">printf</code> 就是别人封装好的技能。</p>
+
+    <div class="pitfall">
+      <h4>⚠ 新手常踩的坑</h4>
+      <ul>
+        <li>函数开头忘写返回值类型（<code class="inline">void</code> 或别的）—— 编译报错</li>
+        <li>有返回值的函数忘写 <code class="inline">return</code> —— 会返回一个垃圾值</li>
+        <li>函数写在了 <code class="inline">main</code> 后面，调用处又看不到它 —— 会警告"隐式声明"。新手先养成"定义写在 main 前面"的习惯</li>
+        <li>调用时参数类型和定义对不上 —— 比如函数要 <code class="inline">int</code>，你传个字符串</li>
+      </ul>
+    </div>
+
+    <div class="keypoints">
+      <h4>划重点</h4>
+      <ul>
+        <li>函数 = 起名一段代码：<code class="inline">返回值类型 函数名(参数)</code></li>
+        <li>定义（发明）一次，调用（使用）无数次</li>
+        <li><code class="inline">void</code> = 不返回值；有返回值用 <code class="inline">return 结果;</code></li>
+        <li>写代码先想"哪些动作反复用" → 塞进函数</li>
+      </ul>
+    </div>
+
+    <div class="practice">
+      <h4>课后练习 · 纸上谈兵</h4>
+      <ol>
+        <li>推演：调用 <code class="inline">heal(50)</code> 屏幕会打印什么？</li>
+        <li>想写一个"算出 KD 再还给你"的函数，返回值类型该写什么？</li>
+        <li><code class="inline">void</code> 是什么意思？什么时候用？</li>
+        <li>思考：为什么要把重复的代码塞进函数，而不是每处复制一遍？</li>
+      </ol>
+      <details class="ans"><summary>点开看答案</summary>
+        1. "治疗了 50 点血量！"。2. <code class="inline">double</code>（KD 带小数）。3. 表示这个函数不返回值，只干活不递结果时用。4. 复用 + 好改：改一处全程序生效，不用满世界找。
+      </details>
+    </div>
+
+    <p class="rib">你早就在用函数了——<code class="inline">printf</code> 就是别人封装好的技能。抄起别人的技能用，这叫"站在巨人的肩膀上"，不丢人。</p>
+  </section>
+
+  <!-- 第8章 -->
+  <section id="ch8" class="chapter">
+    <header class="chapter-hero ch-cypher">
+      <span class="agent-code">CYPHER</span>
+      <p class="agent-name">Agent CYPHER · 情报代课</p>
+      <h2>第 8 章 · 指针</h2>
+    </header>
+
+    <p>Cypher 不爱记情报本身，他记的是"情报放在哪个点位"——地图坐标。<strong>指针</strong>也一样：它<strong>不存值，存的是"值住在哪个地址"</strong>。指针是 C 的分水岭，也是这一整份教程的终点站，深呼吸，你完全能看懂。</p>
+
+    <h3>把内存想成一排带门牌号的房间</h3>
+    <p>每个变量都住在一个房间里，房间有<strong>门牌号（地址）</strong>。变量是"房间里的东西"，地址是"房间的门牌号"。指针就是一个专门<strong>记门牌号</strong>的变量：</p>
+
+    <div class="code-wrap"><pre><code>#include &lt;stdio.h&gt;
+
+int main() {
+    int hp = 100;
+    int *p = &amp;hp;   // p 是一个指针，存的是 hp 的房间门牌号（地址）
+
+    printf("hp 的值：%d\n", hp);            // 100
+    printf("hp 的地址：%p\n", (void*)&amp;hp);  // 一串地址（门牌号）
+    printf("用指针读值：%d\n", *p);         // *p 顺着地址取出值 = 100
+
+    *p = 50;   // 通过指针，改房间里存的东西
+    printf("hp 现在变成了：%d\n", hp);      // 50
+    return 0;
+}</code></pre></div>
+
+    <h3>两个符号，一对搭档</h3>
+    <ul>
+      <li><code class="inline">int *p</code> —— 声明"p 是一个存<strong>地址</strong>的变量"（别管那个 * 放哪，意思都是指针）</li>
+      <li><code class="inline">&amp;hp</code> —— 取 hp 的<strong>地址</strong>（门牌号）</li>
+      <li><code class="inline">*p</code> —— <strong>解引用</strong>，顺着门牌号进去，把房间里的值取出来（或改掉）</li>
+    </ul>
+    <p>一句话：<strong>指针存的是"快递单号"，<code class="inline">*</code> 是"去取件"。</strong>快递单号本身不是包裹，但它能让你准确找到包裹。Cypher 的摄像头也一样——它指向情报，但不等于情报。</p>
+
+    <h3>一个让全场恍然大悟的瞬间</h3>
+    <p>还记得第二章 scanf 那个神秘的 <code class="inline">&amp;</code> 吗？<code class="inline">scanf("%d", &amp;kills)</code> 的意思现在揭晓了：<strong>"把键盘读进来的整数，直接写进 kills 那个房间"</strong>——所以它要的是地址，不是值。你从第二章就被埋伏笔了，现在正式接上。</p>
+    <p>指针还有其他玩法（比如指向数组、指针加减），但那属于"进阶副本"。这一章你的目标很单纯：<strong>看得懂 <code class="inline">&amp;</code> 和 <code class="inline">*</code> 在干嘛</strong>，就满分了。</p>
+
+    <div class="pitfall">
+      <h4>⚠ 新手常踩的坑</h4>
+      <ul>
+        <li>指针没初始化就 <code class="inline">*p = 50</code> —— p 里的地址是垃圾，等于往随机房间乱改东西，可能直接崩</li>
+        <li><code class="inline">p = 50</code> —— 把整数当地址塞进指针，类型不匹配（指针只能存地址）</li>
+        <li>搞混 <code class="inline">&amp;p</code> 和 <code class="inline">*p</code> —— <code class="inline">&amp;p</code> 是"指针变量自己的门牌号"，<code class="inline">*p</code> 才是顺着 p 去取东西</li>
+        <li>scanf 忘写 <code class="inline">&amp;</code> —— 现在知道严重性了吧：没给地址，程序不知道该把值写进哪</li>
+      </ul>
+    </div>
+
+    <div class="keypoints">
+      <h4>划重点</h4>
+      <ul>
+        <li>指针存的是<strong>地址</strong>，不是值本身</li>
+        <li><code class="inline">&amp;变量</code> 取地址；<code class="inline">*指针</code> 解引用取值/改值</li>
+        <li>scanf 带 <code class="inline">&amp;</code>，因为要往那个变量的地址里写值</li>
+        <li>这一章的目标：看得懂，会认。不要求手写复杂指针</li>
+      </ul>
+    </div>
+
+    <div class="practice">
+      <h4>课后练习 · 纸上谈兵</h4>
+      <ol>
+        <li>推演：<code class="inline">int x = 5; int *p = &amp;x;</code> 那么 <code class="inline">*p</code> 是多少？</li>
+        <li>接着上题：执行 <code class="inline">*p = 9;</code> 之后，<code class="inline">x</code> 是多少？</li>
+        <li><code class="inline">scanf("%d", &amp;x)</code> 里那个 <code class="inline">&amp;</code> 为什么必需？</li>
+        <li>一句话总结：指针变量里存的到底是什么？</li>
+      </ol>
+      <details class="ans"><summary>点开看答案</summary>
+        1. 5（顺着地址取出了 x 的值）。2. 9（指针改了房间里存的东西，x 跟着变）。3. 要往 x 的地址里写值，必须知道 x 住在哪。4. 存的是地址（门牌号），不是值本身。
+      </details>
+    </div>
+
+    <p class="rib">指针劝退过一代又一代人。别怕，你就记一句话：<strong>指针是快递单号，* 是去取件。</strong></p>
+  </section>
+
+  <!-- 第9章 -->
+  <section id="ch9" class="chapter">
+    <header class="chapter-hero ch-match">
+      <span class="agent-code">MATCH</span>
+      <p class="agent-name">综合实战 · 战绩结算</p>
+      <h2>第 9 章 · 拼一张你的战绩结算卡</h2>
+    </header>
+
+    <p>学了这么多，是时候串起来玩一把了。目标：<strong>让程序打印一张你自己的 VALORANT 战绩结算卡</strong>。它几乎用上了前面所有章节——变量存数据（第 1 章）、printf 排版（第 2 章）、运算符算 KD（第 3 章）、字符串存 ID（第 6 章）：</p>
+
+    <div class="code-wrap"><pre><code>#include &lt;stdio.h&gt;
+
+int main() {
+    char name[]  = "你的游戏ID";   // 字符串（第 6 章）
+    int kills    = 18;             // 击杀数（第 1 章）
+    int deaths   = 12;             // 死亡数
+    double kd    = (double)kills / deaths;  // KD：强转才精确（第 3 章）
+    char win     = '胜';           // 本场结果
+
+    printf("====================\n");
+    printf("  VALORANT 战绩结算卡\n");
+    printf("====================\n");
+    printf("玩家ID  ：%s\n", name);
+    printf("击杀数  ：%d\n", kills);
+    printf("死亡数  ：%d\n", deaths);
+    printf("KD 比值 ：%.2f\n", kd);
+    printf("本场结果：%c\n", win);
+    printf("====================\n");
+    return 0;
+}</code></pre></div>
+
+    <p>这行 <code class="inline">%.2f</code> 是新的：意思是"小数保留 2 位"，卡片的 KD 就不会打出一长串 3.333333。数字换 1 就是 1 位小数，改着玩。</p>
+
+    <p>你不需要真的运行它——但请跟着代码走一遍，想象屏幕上打出来的样子。然后试这几个改动，看看"思考"的过程：</p>
+    <ul>
+      <li>把 <code class="inline">kills</code> 改大，KD 是不是变高了？（试试改成 30）</li>
+      <li>把 <code class="inline">name</code> 换成你自己的 ID，卡片就是你的了</li>
+      <li>把 <code class="inline">'胜'</code> 换成 <code class="inline">'负'</code>，看哪一行会变</li>
+      <li>把 <code class="inline">%.2f</code> 改成 <code class="inline">%.1f</code>，KD 小数位少了一位</li>
+    </ul>
+
+    <div class="pitfall">
+      <h4>⚠ 这题最容易翻车的地方</h4>
+      <ul>
+        <li>忘写 <code class="inline">(double)</code> 强转 —— 18 / 12 是整数 1，KD 直接变成 1.00，看着像假战绩</li>
+        <li>坑位对不上 —— <code class="inline">%s</code> 配字符串、<code class="inline">%c</code> 配单字符、<code class="inline">%d</code> 配整数，写错就打印乱码</li>
+        <li>忘写 <code class="inline">\n</code> —— 卡片内容全糊成一行，逼死强迫症</li>
+      </ul>
+    </div>
+
+    <div class="practice">
+      <h4>课后练习 · 挑战你的学长卡</h4>
+      <ol>
+        <li>给卡片加一行"爆头数"，用变量 <code class="inline">int headshots</code> 存 11，然后 <code class="inline">printf</code> 打印出来</li>
+        <li>用 <code class="inline">if</code>（第 4 章）加一行：胜负如果是 '胜' 打印"上分了"，否则打印"掉大分"</li>
+        <li>用 <code class="inline">scanf</code>（第 2 章）让玩家自己输入击杀数，再打印卡片</li>
+        <li>挑战：用 <code class="inline">for</code> 循环（第 5 章）打印一长排 <code class="inline">=====</code>，代替手动打一串</li>
+      </ol>
+      <details class="ans"><summary>点开看答案（示意）</summary>
+        1. 加一行 <code class="inline">int headshots = 11;</code> 和 <code class="inline">printf("爆头数  ：%d\n", headshots);</code>。2. <code class="inline">if (win == '胜') printf("上分了\n"); else printf("掉大分\n");</code>。3. <code class="inline">scanf("%d", &amp;kills);</code>。4. <code class="inline">for (int i = 0; i &lt; 20; i++) printf("=");</code>。改完都可以发给学长检查！
+      </details>
+    </div>
+
+    <div class="keypoints">
+      <h4>到这里，指针就是终点站</h4>
+      <ul>
+        <li>你已经把 C 的<strong>主干语法</strong>都见过一遍：变量、输入输出、运算、判断、循环、数组、函数、指针</li>
+        <li>往下还有结构体、内存管理、文件操作……但那是"进阶副本"，改天再说</li>
+        <li>先把你的战绩卡"打"出来，截图发给你亲爱的学长看看</li>
+      </ul>
+    </div>
+
+    <p class="rib">真正想运行起来？等你哪天想装环境了再来找我，一个编译器的事。现在——先去上分，顺带把 C 学会。</p>
+  </section>
+
+  <footer>
+    <p>完 · 由学长倾情编写（无畏契约联名款，并没有真的联名）</p>
+    <p>祝你早日上分 &amp; 顺利拿下 C 语言。</p>
+  </footer>
+
+</div>
+</main>
+
+<button class="to-top" type="button" aria-label="回到顶部">↑</button>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- 1. 代码高亮 ---------- */
+  function escapeHtml(s){
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+  function highlightLine(line){
+    var re = /(\/\/.*$)|("(?:[^"\\\n]|\\.)*")|('(?:[^'\\\n]|\\.)*')|(\b\d+(?:\.\d+)?\b)|(#[A-Za-z_]\w*)|(\b(?:int|double|char|void|float|long|short|return|if|else|switch|case|default|break|continue|for|while|do|include|const|struct|typedef)\b)/g;
+    var out = "", last = 0, m;
+    while ((m = re.exec(line)) !== null) {
+      out += escapeHtml(line.slice(last, m.index));
+      if (m[1])       out += '<span class="c-comment">' + escapeHtml(m[1]) + '</span>';
+      else if (m[2])  out += '<span class="c-string">'  + escapeHtml(m[2]) + '</span>';
+      else if (m[3])  out += '<span class="c-string">'  + escapeHtml(m[3]) + '</span>';
+      else if (m[4])  out += '<span class="c-number">'  + m[4] + '</span>';
+      else if (m[5])  out += '<span class="c-pre">'     + escapeHtml(m[5]) + '</span>';
+      else if (m[6])  out += '<span class="c-kw">'      + m[6] + '</span>';
+      last = m.index + m[0].length;
+    }
+    out += escapeHtml(line.slice(last));
+    return out;
+  }
+  document.querySelectorAll(".code-wrap code").forEach(function(el){
+    var text = el.textContent;
+    var html = text.split("\n").map(highlightLine).join("\n");
+    el.innerHTML = html;
+  });
+
+  /* ---------- 2. 复制按钮 ---------- */
+  function fallbackCopy(text){
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); } catch(e){}
+    document.body.removeChild(ta);
+  }
+  function copyText(text){
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).catch(function(){ fallbackCopy(text); });
+    }
+    fallbackCopy(text);
+    return Promise.resolve();
+  }
+  document.querySelectorAll(".code-wrap").forEach(function(wrap){
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "copy-btn";
+    btn.textContent = "复制";
+    wrap.appendChild(btn);
+    var code = wrap.querySelector("code");
+    btn.addEventListener("click", function(){
+      copyText(code.textContent).then(function(){
+        btn.classList.add("done");
+        btn.textContent = "已复制 ✓";
+        setTimeout(function(){
+          btn.classList.remove("done");
+          btn.textContent = "复制";
+        }, 1600);
+      });
+    });
+  });
+
+  /* ---------- 3. 滚动高亮当前章节 ---------- */
+  var sections = document.querySelectorAll("main .chapter");
+  var navLinks = document.querySelectorAll(".nav a");
+  var spy = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting) {
+        navLinks.forEach(function(l){
+          l.classList.toggle("active", l.getAttribute("href") === "#" + en.target.id);
+        });
+      }
+    });
+  }, { rootMargin: "-40% 0px -55% 0px" });
+  sections.forEach(function(s){ spy.observe(s); });
+
+  /* ---------- 4. 手机抽屉菜单 ---------- */
+  var sidebar = document.querySelector(".sidebar");
+  var overlay = document.querySelector(".overlay");
+  var hamburger = document.querySelector(".hamburger");
+  function closeDrawer(){
+    sidebar.classList.remove("open");
+    overlay.classList.remove("show");
+  }
+  hamburger.addEventListener("click", function(){
+    sidebar.classList.add("open");
+    overlay.classList.add("show");
+  });
+  overlay.addEventListener("click", closeDrawer);
+  navLinks.forEach(function(l){ l.addEventListener("click", closeDrawer); });
+
+  /* ---------- 5. 返回顶部 ---------- */
+  var toTop = document.querySelector(".to-top");
+  window.addEventListener("scroll", function(){
+    toTop.classList.toggle("show", window.scrollY > 600);
+  }, { passive: true });
+  toTop.addEventListener("click", function(){
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+})();
+</script>
+</body>
+</html>
